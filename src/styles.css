@@ -71,10 +71,18 @@ p {
   padding: 0 28px;
 }
 .site-header {
-  border-bottom: 1px solid #e9e9e9;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
   background: #fff;
-  position: relative;
-  z-index: 20;
+  border-bottom: 1px solid #e9e9e9;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+body {
+  padding-top: 98px;
 }
 .nav-inner {
   display: flex;
