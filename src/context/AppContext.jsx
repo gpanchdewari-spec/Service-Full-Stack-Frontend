@@ -1,9 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-  services as samples,
-  categories,
-  cities,
-} from "../../../shared/catalog";
+import { services as samples, categories, cities } from "../../shared/catalog";
 import { api, demoMode } from "../api/client";
 
 const AppContext = createContext(null);

@@ -6,7 +6,7 @@ import { useApp } from "../context/AppContext";
 import { money, asset } from "../config/site";
 import { QuantityButton } from "../components/services/ServiceCard";
 import { api, demoMode, errorMessage } from "../api/client";
-import { slots } from "../../../shared/catalog";
+import { slots } from "../../shared/catalog";
 
 export default function Cart() {
   const { items, total, user, city, setCity, pinCode, setPinCode, clearCart } =
