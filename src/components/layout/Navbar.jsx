@@ -61,13 +61,22 @@ export default function Navbar() {
     <>
       <header className="site-header">
         <div className="container nav-inner">
-          <Link to="/" className="brand" aria-label="Urban Company home">
-            <span className="brand-mark">UC</span>
-            <span>
-              Urban
-              <br />
-              Company
-            </span>
+          <Link
+            to="/"
+            aria-label="HomeSaathi home"
+            className="inline-flex h-11 shrink-0 items-center"
+          >
+            <img
+              src="/assets/homesaathi-icon.png"
+              alt=""
+              className="block! h-10 w-10 object-contain sm:hidden!"
+            />
+
+            <img
+              src="/assets/homesaathi-logo.png"
+              alt="HomeSaathi"
+              className="hidden! h-14 w-auto max-w-[285px] object-contain sm:block!"
+            />
           </Link>
 
           <nav className="desktop-nav">

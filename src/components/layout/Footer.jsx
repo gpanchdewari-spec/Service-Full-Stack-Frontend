@@ -3,13 +3,16 @@ export default function Footer() {
   return (
     <footer className="footer">
       <div className="container">
-        <Link to="/" className="brand">
-          <span className="brand-mark">UC</span>
-          <span>
-            Urban
-            <br />
-            Company
-          </span>
+        <Link
+          to="/"
+          aria-label="HomeSaathi home"
+          className="inline-flex items-center"
+        >
+          <img
+            src="/assets/homesaathi-logo.png"
+            alt="HomeSaathi"
+            className="h-16 w-auto max-w-[390px] object-contain"
+          />
         </Link>
         <div className="footer-grid">
           <div>
@@ -36,7 +39,7 @@ export default function Footer() {
         </div>
         <div className="footer-bottom">
           <span>
-            Independent learning project. Not affiliated with Urban Company.
+            ALL RIGHTS RESERVED TO HOME SAATHI. DEVELOPED BY GOVIND THAKUR.
           </span>
           <span>Built with care, for your home.</span>
         </div>
