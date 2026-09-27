@@ -482,18 +482,13 @@ export default function Admin() {
                         updateBooking(booking._id, event.target.value)
                       }
                     >
-                      <option value={booking.status}>{booking.status}</option>
-
-                      {(booking.status === "Pending"
-                        ? ["Confirmed", "Cancelled"]
-                        : booking.status === "Confirmed"
-                          ? ["Completed", "Cancelled"]
-                          : []
-                      ).map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
+                      <option value="Pending">Pending</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Assigned">Professional Assigned</option>
+                      <option value="OnTheWay">Professional On The Way</option>
+                      <option value="InProgress">Service In Progress</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Cancelled">Cancelled</option>
                     </select>
                   </td>
                 </tr>
