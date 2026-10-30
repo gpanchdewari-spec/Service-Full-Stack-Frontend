@@ -2,6 +2,8 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ServiceCard from "../services/ServiceCard";
+
+
 export default function ServiceSection({
   title,
   subtitle,

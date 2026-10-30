@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, ShieldCheck } from "lucide-react";
 
@@ -9,33 +10,60 @@ import { api, demoMode, errorMessage } from "../api/client";
 import { slots } from "../../shared/catalog";
 
 export default function Cart() {
-  const { items, total, user, city, setCity, pinCode, setPinCode, clearCart } =
-    useApp();
+  const {
+    items,
+    total,
+    user,
+    city,
+    setCity,
+    pinCode,
+    setPinCode,
+    clearCart,
+  } = useApp();
 
   const [enteredPin, setEnteredPin] = useState(pinCode || "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const navigate = useNavigate();
 
-  const min = new Date(Date.now() + 86400000).toLocaleDateString("en-CA", {
-    timeZone: "Asia/Kolkata",
-  });
+  // Redirect users to login if they are not authenticated.
+  useEffect(() => {
+    if (!user) {
+      navigate("/login?next=/cart", { replace: true });
+    } else {
+      setAuthChecked(true);
+    }
+  }, [user, navigate]);
 
-  const max = new Date(Date.now() + 29 * 86400000).toLocaleDateString("en-CA", {
-    timeZone: "Asia/Kolkata",
-  });
+  const min = new Date(Date.now() + 86400000).toLocaleDateString(
+    "en-CA",
+    {
+      timeZone: "Asia/Kolkata",
+    }
+  );
+
+  const max = new Date(Date.now() + 29 * 86400000).toLocaleDateString(
+    "en-CA",
+    {
+      timeZone: "Asia/Kolkata",
+    }
+  );
 
   async function submit(event) {
     event.preventDefault();
 
+    // Verify the user is logged in before booking.
     if (!user) {
       navigate("/login?next=/cart");
       return;
     }
 
-    // FormData ko await se pehle read karo.
-    const fields = Object.fromEntries(new FormData(event.currentTarget));
+    // Read form data before any await.
+    const fields = Object.fromEntries(
+      new FormData(event.currentTarget)
+    );
 
     const selectedPin = enteredPin.trim();
 
@@ -43,15 +71,15 @@ export default function Cart() {
     setBusy(true);
 
     try {
-      // PIN serviceable hai ya nahi, backend se check karo.
+      // Verify whether the PIN code is serviceable.
       const areaResponse = await api.get(
-        `/service-area/${encodeURIComponent(selectedPin)}`,
+        `/service-area/${encodeURIComponent(selectedPin)}`
       );
 
       if (!areaResponse.data.available) {
         setError(
           areaResponse.data.message ||
-            "Service is not available at this PIN code.",
+            "Service is not available at this PIN code."
         );
         return;
       }
@@ -72,9 +100,12 @@ export default function Cart() {
       };
 
       if (demoMode) {
+        // Create a demo booking.
         const booking = {
           ...payload,
-          _id: `DEMO-${Date.now().toString(36).toUpperCase()}`,
+          _id: `DEMO-${Date.now()
+            .toString(36)
+            .toUpperCase()}`,
           items: items.map((service) => ({
             name: service.name,
             price: service.price,
@@ -89,7 +120,7 @@ export default function Cart() {
 
         try {
           previousBookings = JSON.parse(
-            sessionStorage.getItem("uc-demo-bookings") || "[]",
+            sessionStorage.getItem("uc-demo-bookings") || "[]"
           );
         } catch {
           previousBookings = [];
@@ -97,10 +128,10 @@ export default function Cart() {
 
         sessionStorage.setItem(
           "uc-demo-bookings",
-          JSON.stringify([booking, ...previousBookings]),
+          JSON.stringify([booking, ...previousBookings])
         );
       } else {
-        // Backend bookingController PIN ko phir verify karega.
+        // The backend should verify the PIN code again.
         await api.post("/bookings", payload);
       }
 
@@ -113,12 +144,22 @@ export default function Cart() {
     }
   }
 
+  // Prevent the cart from rendering before authentication is checked.
+  if (!authChecked) {
+    return null;
+  }
+
+  // Display an empty-cart message when there are no items.
   if (!items.length) {
     return (
       <main className="container page empty">
         <ShoppingBag size={54} />
+
         <h1>Your cart feels a little empty</h1>
-        <p>Find a service that makes your day easier.</p>
+
+        <p>
+          Find a service that makes your day easier.
+        </p>
 
         <Link className="button mt-6" to="/services">
           Explore services
@@ -142,11 +183,18 @@ export default function Cart() {
       )}
 
       <div className="checkout-grid">
-        <form id="booking-form" onSubmit={submit} className="form-stack panel">
-          <h2 className="text-2xl font-semibold">Your service details</h2>
+        <form
+          id="booking-form"
+          onSubmit={submit}
+          className="form-stack panel"
+        >
+          <h2 className="text-2xl font-semibold">
+            Your service details
+          </h2>
 
           <label>
             Service PIN code
+
             <input
               name="pinCode"
               type="text"
@@ -155,7 +203,9 @@ export default function Cart() {
               maxLength={6}
               value={enteredPin}
               onChange={(event) => {
-                setEnteredPin(event.target.value.replace(/\D/g, ""));
+                setEnteredPin(
+                  event.target.value.replace(/\D/g, "")
+                );
                 setError("");
               }}
               placeholder="Enter your 6-digit PIN code"
@@ -171,6 +221,7 @@ export default function Cart() {
 
           <label>
             Complete address
+
             <textarea
               name="address"
               required
@@ -182,6 +233,7 @@ export default function Cart() {
 
           <label>
             Mobile number
+
             <input
               name="phone"
               type="tel"
@@ -196,11 +248,19 @@ export default function Cart() {
           <div className="grid sm:grid-cols-2 gap-5">
             <label>
               Service date
-              <input type="date" name="date" min={min} max={max} required />
+
+              <input
+                type="date"
+                name="date"
+                min={min}
+                max={max}
+                required
+              />
             </label>
 
             <label>
               Arrival slot (IST)
+
               <select name="slot" required>
                 <option value="">Choose a time</option>
 
@@ -226,7 +286,9 @@ export default function Cart() {
         </form>
 
         <aside className="panel cart-summary">
-          <h2 className="text-xl font-semibold mb-5">Your cart</h2>
+          <h2 className="text-xl font-semibold mb-5">
+            Your cart
+          </h2>
 
           {items.map((service) => (
             <div className="cart-item" key={service.slug}>
@@ -256,28 +318,18 @@ export default function Cart() {
             <span>{money(total)}</span>
           </div>
 
-          {user ? (
-            <button
-              type="submit"
-              form="booking-form"
-              className="button w-full"
-              disabled={busy}
-            >
-              {busy
-                ? "Booking…"
-                : demoMode
-                  ? "Create demo booking"
-                  : "Confirm booking"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="button w-full"
-              onClick={() => navigate("/login?next=/cart")}
-            >
-              Sign in to book
-            </button>
-          )}
+          <button
+            type="submit"
+            form="booking-form"
+            className="button w-full"
+            disabled={busy}
+          >
+            {busy
+              ? "Booking…"
+              : demoMode
+                ? "Create demo booking"
+                : "Confirm booking"}
+          </button>
 
           <p className="text-xs text-gray-500 mt-4 text-center">
             Booking is accepted only for a serviceable PIN code.

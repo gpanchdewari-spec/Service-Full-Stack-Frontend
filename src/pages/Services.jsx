@@ -2,6 +2,8 @@ import { useSearchParams, Link } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import ServiceCard from "../components/services/ServiceCard";
+
+
 export default function Services() {
   const { services, categories, loading, error } = useApp();
   const [params, setParams] = useSearchParams();
@@ -15,6 +17,8 @@ export default function Services() {
   );
   if (sort === "low") list.sort((a, b) => a.price - b.price);
   if (sort === "high") list.sort((a, b) => b.price - a.price);
+
+  
   const update = (k, v) => {
     const next = new URLSearchParams(params);
     v ? next.set(k, v) : next.delete(k);

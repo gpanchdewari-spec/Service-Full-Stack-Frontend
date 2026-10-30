@@ -2,10 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, demoMode, errorMessage } from "../api/client";
+
+
+
 export default function Login() {
   const { setUser, user } = useApp(),
     navigate = useNavigate(),
     [params] = useSearchParams();
+
+    
   const [register, setRegister] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);

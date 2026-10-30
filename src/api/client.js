@@ -9,6 +9,9 @@ export const api = axios.create({
   timeout: 120000,
 });
 
+///"http://localhost:5000/api"
+//"https://service-full-stack-backend-1.onrender.com/api"
+
 api.interceptors.request.use((config) => {
   const token = sessionStorage.getItem(TOKEN_KEY);
 
