@@ -25,7 +25,7 @@ function imageUrl(image) {
   return `/assets/${image}`;
 }
 
-// Reusable form for both creating and editing a service.
+// Reusable form for creating and editing services.
 function ServiceForm({ service, categories, busy, onSave, onCancel }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
@@ -80,13 +80,12 @@ function ServiceForm({ service, categories, busy, onSave, onCancel }) {
 
     const data = new FormData(event.currentTarget);
 
-    // Multipart fields reach Express as strings.
     data.set(
       "active",
       event.currentTarget.elements.active.checked ? "true" : "false",
     );
 
-    // Keep the existing image when no replacement was selected.
+    // Remove the empty file field if no new image was selected.
     data.delete("image");
 
     if (file) {
@@ -216,7 +215,11 @@ function ServiceForm({ service, categories, busy, onSave, onCancel }) {
         </label>
 
         <div className="flex flex-wrap gap-3">
-          <button type="submit" className="button" disabled={!!fileError}>
+          <button
+            type="submit"
+            className="button"
+            disabled={busy || !!fileError}
+          >
             {busy ? "Saving…" : editing ? "Save changes" : "Create service"}
           </button>
 
@@ -247,6 +250,7 @@ export default function Admin() {
   // null = closed, "new" = create, service object = edit
   const [editor, setEditor] = useState(null);
 
+  // Load admin data.
   async function load() {
     const [bookingResponse, serviceResponse] = await Promise.all([
       api.get("/admin/bookings"),
@@ -258,7 +262,10 @@ export default function Admin() {
   }
 
   useEffect(() => {
-    if (user?.role !== "admin" || demoMode) return;
+    if (user?.role !== "admin" || demoMode) {
+      setLoading(false);
+      return;
+    }
 
     let cancelled = false;
 
@@ -276,9 +283,13 @@ export default function Admin() {
           setServices(serviceResponse.data.services);
         }
       } catch (err) {
-        if (!cancelled) setError(errorMessage(err));
+        if (!cancelled) {
+          setError(errorMessage(err));
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -289,6 +300,7 @@ export default function Admin() {
     };
   }, [user?.role]);
 
+  // Update booking status.
   async function updateBooking(id, status) {
     setBusy(true);
     setError("");
@@ -318,14 +330,13 @@ export default function Admin() {
     }
   }
 
+  // Create or update service.
   async function saveService(formData, id) {
     setBusy(true);
     setError("");
     setSuccess("");
 
     try {
-      // Axios automatically sets the multipart boundary.
-      // Do not manually set Content-Type here.
       const response = id
         ? await api.patch(`/admin/services/${id}`, formData)
         : await api.post("/admin/services", formData);
@@ -341,7 +352,43 @@ export default function Admin() {
       );
 
       setEditor(null);
-      setSuccess(id ? "Service updated." : "New service added.");
+
+      setSuccess(
+        id
+          ? "Service updated successfully."
+          : "New service added successfully.",
+      );
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Delete service.
+  async function deleteService(id) {
+    const confirmed = window.confirm(
+      "Are you sure you want to permanently delete this service?",
+    );
+
+    if (!confirmed) return;
+
+    setBusy(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await api.delete(`/admin/services/${id}`);
+
+      // Remove deleted service from frontend state.
+      setServices((current) => current.filter((service) => service._id !== id));
+
+      // Close editor if the deleted service was being edited.
+      if (editor && editor !== "new" && editor._id === id) {
+        setEditor(null);
+      }
+
+      setSuccess(response.data.message || "Service deleted successfully.");
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -382,6 +429,7 @@ export default function Admin() {
 
         {tab === "services" && !editor && (
           <button
+            type="button"
             className="button"
             disabled={busy || loading}
             onClick={() => openEditor("new")}
@@ -391,8 +439,10 @@ export default function Admin() {
         )}
       </div>
 
+      {/* Admin tabs */}
       <div className="filter-chips my-6">
         <button
+          type="button"
           className={tab === "bookings" ? "active" : ""}
           disabled={busy}
           onClick={() => setTab("bookings")}
@@ -401,6 +451,7 @@ export default function Admin() {
         </button>
 
         <button
+          type="button"
           className={tab === "services" ? "active" : ""}
           disabled={busy}
           onClick={() => setTab("services")}
@@ -409,15 +460,18 @@ export default function Admin() {
         </button>
       </div>
 
+      {/* Error message */}
       {error && (
         <div className="error mb-5" role="alert">
           {error}
+
           <button
             type="button"
-            className="underline"
+            className="underline ml-2"
             disabled={busy}
             onClick={async () => {
               setError("");
+
               try {
                 await load();
               } catch (err) {
@@ -430,6 +484,7 @@ export default function Admin() {
         </div>
       )}
 
+      {/* Success message */}
       {success && (
         <p className="success mb-5" role="status">
           {success}
@@ -439,6 +494,7 @@ export default function Admin() {
       {loading ? (
         <p className="notice">Loading admin panel…</p>
       ) : tab === "bookings" ? (
+        /* Booking management */
         <div className="overflow-x-auto">
           <table>
             <thead>
@@ -499,6 +555,7 @@ export default function Admin() {
           {!bookings.length && <p className="notice">No bookings yet.</p>}
         </div>
       ) : (
+        /* Service management */
         <>
           {editor && (
             <div className="max-w-2xl mb-8">
@@ -534,6 +591,7 @@ export default function Admin() {
 
                 <p className="font-semibold mt-3">
                   {money(service.price)}
+
                   <span className="text-sm font-normal text-gray-500">
                     {" "}
                     · {service.duration} minutes
@@ -544,13 +602,26 @@ export default function Admin() {
                   {service.active ? "Available" : "Unavailable"}
                 </p>
 
-                <button
-                  className="button mt-4"
-                  disabled={busy}
-                  onClick={() => openEditor(service)}
-                >
-                  Edit service
-                </button>
+                {/* Edit and Delete buttons */}
+                <div className="flex gap-3 mt-4">
+                  <button
+                    type="button"
+                    className="button flex-1"
+                    disabled={busy}
+                    onClick={() => openEditor(service)}
+                  >
+                    Edit service
+                  </button>
+
+                  <button
+                    type="button"
+                    className="px-5 py-3 rounded-lg border border-red-500 text-red-600 hover:bg-red-50"
+                    disabled={busy}
+                    onClick={() => deleteService(service._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </article>
             ))}
           </div>
